@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحاضرة 8 - بنية البيانات المكدس (Stack)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border: 2px solid #2c3e50;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .lecture-info {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef2f7;
+            border-radius: 10px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 2px solid #2c3e50;
+        }
+        
+        .section-title {
+            color: #2980b9;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-left: 10px;
+            color: #e74c3c;
+        }
+        
+        .stack-definition, .stack-usage, .stack-properties {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .stack-visual {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 250px;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .stack-item {
+            width: 120px;
+            height: 50px;
+            background: #3498db;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #2980b9;
+            border-radius: 5px;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stack-top {
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .stack-label {
+            position: absolute;
+            top: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .code-comment {
+            color: #95a5a6;
+        }
+        
+        .code-keyword {
+            color: #3498db;
+        }
+        
+        .code-function {
+            color: #9b59b6;
+        }
+        
+        .code-variable {
+            color: #2ecc71;
+        }
+        
+        .code-string {
+            color: #e74c3c;
+        }
+        
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .operation-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        
+        .operation-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .operation-title {
+            color: #2980b9;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .operation-title i {
+            margin-left: 10px;
+            color: #e74c3c;
+        }
+        
+        .example-output {
+            background: #f8f9fa;
+            border-left: 4px solid #2ecc71;
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 15px 0;
+        }
+        
+        .output-title {
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .comparison {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-title {
+            text-align: center;
+            color: #2980b9;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .lecture-info, .comparison {
+                flex-direction: column;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+        
+        .explanation-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #9b59b6;
+        }
+        
+        .stack-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .animation-controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .animation-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .animation-btn:hover {
+            background: #2980b9;
+        }
+        
+        .stack-container {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            min-height: 300px;
+            width: 200px;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+        }
+        
+        .stack-element {
+            width: 150px;
+            height: 50px;
+            background: #3498db;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.5s ease;
+        }
+        
+        .stack-top-element {
+            background: #e74c3c;
+        }
+        
+        .stack-label-animation {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .operation-example {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-layer-group"></i> المحاضرة 8: بنية البيانات المكدس (Stack)</h1>
+            <p>جامعة البعث - كلية الهندسة المعلوماتية - السنة الثانية</p>
+            
+            <div class="lecture-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-user"></i> المحاضر</h3>
+                    <p>ناديا خرسان</p>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-book"></i> المادة</h3>
+                    <p>الخوارزميات وبنى المعطيات 1</p>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-code"></i> النوع</h3>
+                    <p>بنية بيانات خطية (Linear Data Structure)</p>
+                </div>
+            </div>
+        </header>
+        
+        <!-- تعريف المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-info-circle"></i> تعريف المكدس (Stack)</h2>
+            
+            <div class="stack-definition">
+                <p>المكدس هو بنية معطيات خطية تشبه القائمة المترابطة ولكن لا يمكن الوصول إلا لآخر عنصر تم إدخاله.</p>
+                <p>يدعى مكان العنصر الأخير <strong>قمة المكدس (TOP)</strong>.</p>
+                <p>لا يمكن إضافة العناصر وإزالتها إلا عند قمة المكدس فقط (Top)، حسب المبدأ:</p>
+                <p><strong>«العنصر الداخل أخيراً هو الخارج أولاً» (LIFO = Last In, First Out)</strong></p>
+            </div>
+            
+            <div class="explanation-box">
+                <h3><i class="fas fa-lightbulb"></i> شرح مفصل:</h3>
+                <p>المكدس يشبه تمامًا كومة من الأطباق في المطبخ:</p>
+                <ul>
+                    <li>عندما تضيف طبقًا جديدًا، تضعه فوق الكومة (Push)</li>
+                    <li>عندما تأخذ طبقًا، تأخذه من أعلى الكومة (Pop)</li>
+                    <li>لا يمكنك أخذ طبق من منتصف الكومة أو أسفلها</li>
+                    <li>الطبق الأخير الذي وضعته هو أول طبق ستأخذه</li>
+                </ul>
+                <p>هذا هو مبدأ LIFO (Last-In-First-Out) الذي يحكم عمل بنية البيانات المكدس.</p>
+            </div>
+            
+            <div class="stack-visual">
+                <div class="stack-label">قمة المكدس (TOP)</div>
+                <div class="stack-item stack-top">e4</div>
+                <div class="stack-item">e3</div>
+                <div class="stack-item">e2</div>
+                <div class="stack-item">e1</div>
+            </div>
+            
+            <div class="stack-properties">
+                <h3><i class="fas fa-cogs"></i> خصائص المكدس:</h3>
+                <ul>
+                    <li>بنية بيانات خطية (Linear Data Structure)</li>
+                    <li>يتبع مبدأ LIFO (Last-In-First-Out)</li>
+                    <li>الإضافة والحذف من جهة واحدة فقط (TOP)</li>
+                    <li>الوصول محدود لعنصر القمة فقط</li>
+                    <li>يحتوي على مؤشر خاص (TOP) يشير إلى آخر عنصر تم إضافته</li>
+                    <li>له سعة محدودة في التمثيل بالمصفوفة، وغير محدودة في التمثيل بالقائمة المترابطة</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- استخدامات المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-laptop-code"></i> استخدامات المكدس</h2>
+            
+            <div class="stack-usage">
+                <p>يمكن استخدام المكدسات في العديد من التطبيقات التي تتطلب تخزين البيانات ثم استرجاعها بترتيب عكسي:</p>
+                <ul>
+                    <li><strong>تخزين بيانات وعناوين العودة للتوابع عند استدعاءها:</strong> عند استدعاء دالة، يتم تخزين معلومات العودة في المكدس</li>
+                    <li><strong>معالجة التعابير الحسابية:</strong> تقييم التعابير أو تحويلها من صيغة إلى أخرى (مثل تحويل من Infix إلى Postfix)</li>
+                    <li><strong>اختبار تناسق الأقواس في تعبير أو نص (Parenthesis Matching):</strong> التأكد من أن الأقواس متوازنة ومغلقة بشكل صحيح</li>
+                    <li><strong>تحويل الخوارزميات العودية إلى تكرارية:</strong> يمكن استخدام المكدس لتحويل الدوال العودية إلى تكرارية</li>
+                    <li><strong>آلية عمل زر التراجع (Undo) في البرامج:</strong> تخزين الإجراءات السابقة في مكدس للرجوع إليها</li>
+                    <li><strong>سجل الصفحات التي تمت زيارتها في متصفح الويب:</strong> المكدس يستخدم لتتبع تاريخ التصفح</li>
+                    <li><strong>انعكاس سلسلة (String Reversal):</strong> يمكن عكس سلسلة باستخدام مكدس بسهولة</li>
+                </ul>
+            </div>
+            
+            <div class="operation-example">
+                <h3><i class="fas fa-calculator"></i> مثال: اختبار توازن الأقواس</h3>
+                <p>يتم استخدام المكدس للتأكد من أن الأقواس متوازنة في تعبير ما:</p>
+                <ul>
+                    <li>عند مواجهة قوس فتح '('، نضعه في المكدس</li>
+                    <li>عند مواجهة قوس إغلاق ')'، نخرج قوسًا من المكدس</li>
+                    <li>إذا كان المكدس فارغًا عند مواجهة قوس إغلاق، فهذا يعني أن الأقواس غير متوازنة</li>
+                    <li>إذا انتهى التعبير ولم يكن المكدس فارغًا، فهذا يعني أن الأقواس غير متوازنة</li>
+                </ul>
+                <p>التعبير الصحيح: (a + b) * (c - d) → متوازن</p>
+                <p>التعبير الخطأ: (a + b) * (c - d)) → غير متوازن</p>
+            </div>
+        </section>
+        
+        <!-- تمثيل المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-project-diagram"></i> تمثيل المكدس</h2>
+            
+            <div class="explanation-box">
+                <h3><i class="fas fa-lightbulb"></i> شرح مفصل:</h3>
+                <p>يمكن تمثيل المكدس بطريقتين رئيسيتين:</p>
+                <ol>
+                    <li><strong>باستخدام المصفوفات (Arrays):</strong> طريقة بسيطة وسهلة التنفيذ، ولكن لها سعة محدودة</li>
+                    <li><strong>باستخدام القوائم المترابطة (Linked Lists):</strong> أكثر مرونة حيث لا يوجد حد أقصى للسعة (إلا الذاكرة المتاحة)</li>
+                </ol>
+                <p>كل طريقة لها مميزاتها وعيوبها، ويعتمد اختيار الطريقة على متطلبات التطبيق.</p>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h3 class="comparison-title">تمثيل المكدس باستخدام مصفوفة (Array)</h3>
+                    <p>في هذا التمثيل نستخدم مصفوفة ذات حجم ثابت لتخزين عناصر المكدس.</p>
+                    
+                    <div class="code-block">
+                        <span class="code-comment">// تعريف بنية المكدس</span><br>
+                        <span class="code-keyword">const int</span> <span class="code-variable">MAX_SIZE</span> = 100;<br>
+                        <span class="code-keyword">struct</span> <span class="code-function">stack</span> {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">top</span>; <span class="code-comment">// مؤشر قمة المكدس</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">elm</span>[<span class="code-variable">MAX_SIZE</span>]; <span class="code-comment">// عناصر المكدس</span><br>
+                        };
+                    </div>
+                    
+                    <p>حالة المكدس الفارغ: <code>top = -1</code></p>
+                    
+                    <h4>المميزات:</h4>
+                    <ul>
+                        <li>سهولة التنفيذ</li>
+                        <li>كفاءة في استخدام الذاكرة (لا حاجة لمؤشرات إضافية)</li>
+                    </ul>
+                    
+                    <h4>العيوب:</h4>
+                    <ul>
+                        <li>حجم ثابت (قد يحدث طفحان - Stack Overflow)</li>
+                        <li>غير مرن في تغيير الحجم</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">تمثيل المكدس باستخدام قائمة مترابطة (Linked List)</h3>
+                    <p>في هذا التمثيل نستخدم عقد مترابطة لتخزين عناصر المكدس.</p>
+                    
+                    <div class="code-block">
+                        <span class="code-comment">// تعريف بنية العقدة</span><br>
+                        <span class="code-keyword">struct</span> <span class="code-function">node</span> {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">data</span>; <span class="code-comment">// بيانات العقدة</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">node</span>* <span class="code-variable">next</span>; <span class="code-comment">// مؤشر للعقدة التالية</span><br>
+                        };<br><br>
+                        
+                        <span class="code-keyword">node</span>* <span class="code-variable">top</span> = <span class="code-keyword">NULL</span>; <span class="code-comment">// مؤشر قمة المكدس</span>
+                    </div>
+                    
+                    <p>حالة المكدس الفارغ: <code>top = NULL</code></p>
+                    
+                    <h4>المميزات:</h4>
+                    <ul>
+                        <li>حجم ديناميكي (يتغير حسب الحاجة)</li>
+                        <li>لا يوجد مشكلة طفحان (إلا في حالة نفاد الذاكرة)</li>
+                        <li>مرن وسهل الإضافة والحذف</li>
+                    </ul>
+                    
+                    <h4>العيوب:</h4>
+                    <ul>
+                        <li>يستهلك ذاكرة أكثر بسبب تخزين المؤشرات</li>
+                        <li>تنفيذه أكثر تعقيدًا قليلًا</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- عمليات المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-tasks"></i> العمليات الأساسية على المكدس</h2>
+            
+            <div class="explanation-box">
+                <h3><i class="fas fa-lightbulb"></i> شرح مفصل:</h3>
+                <p>تعتمد بنية البيانات المكدس على مجموعة من العمليات الأساسية التي تحكم طريقة عمله:</p>
+                <ul>
+                    <li><strong>تهيئة المكدس (Initialization):</strong> إنشاء مكدس جديد فارغ</li>
+                    <li><strong>الإضافة (Push):</strong> إضافة عنصر جديد إلى قمة المكدس</li>
+                    <li><strong>الحذف (Pop):</strong> إزالة العنصر الموجود في قمة المكدس وإرجاع قيمته</li>
+                    <li><strong>قراءة القمة (Peek/Top):</strong> قراءة قيمة العنصر في قمة المكدس دون إزالته</li>
+                    <li><strong>التحقق من الفراغ (isEmpty):</strong> معرفة ما إذا كان المكدس فارغًا</li>
+                    <li><strong>التحقق من الامتلاء (isFull):</strong> معرفة ما إذا كان المكدس ممتلئًا (في حالة التمثيل بالمصفوفة)</li>
+                    <li><strong>الحصول على الحجم (getSize):</strong> معرفة عدد العناصر الموجودة في المكدس</li>
+                </ul>
+            </div>
+            
+            <div class="operations-grid">
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-broom"></i> initStack()</h3>
+                    <p>تهيئة المكدس بحيث يصبح فارغاً</p>
+                    <p>للمصفوفة: <code>top = -1</code></p>
+                    <p>للقائمة: <code>top = NULL</code></p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-plus-circle"></i> push(item)</h3>
+                    <p>إضافة عنصر جديد إلى قمة المكدس</p>
+                    <p>يجب التحقق من عدم امتلاء المكدس لتجنب الطفحان (Overflow)</p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-minus-circle"></i> pop()</h3>
+                    <p>حذف العنصر الموجود في قمة المكدس وإرجاع قيمته</p>
+                    <p>يجب التحقق من عدم فراغ المكدس لتجنب الجفاف (Underflow)</p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-eye"></i> getTop()</h3>
+                    <p>قراءة العنصر الموجود في قمة المكدس دون حذفه</p>
+                    <p>يجب التحقق من عدم فراغ المكدس</p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-question-circle"></i> isEmpty()</h3>
+                    <p>التحقق مما إذا كان المكدس فارغاً</p>
+                    <p>للمصفوفة: <code>return (top == -1)</code></p>
+                    <p>للقائمة: <code>return (top == NULL)</code></p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-exclamation-circle"></i> isFull()</h3>
+                    <p>التحقق مما إذا كان المكدس ممتلئاً</p>
+                    <p>للمصفوفة: <code>return (top == MAX_SIZE-1)</code></p>
+                    <p>للقائمة: عادة لا يكون ممتلئاً إلا في حالة نفاد الذاكرة</p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+                
+                <div class="operation-card">
+                    <h3 class="operation-title"><i class="fas fa-sort-numeric-up"></i> getSize()</h3>
+                    <p>الحصول على عدد العناصر الموجودة في المكدس</p>
+                    <p>للمصفوفة: <code>return top + 1</code></p>
+                    <p>للقائمة: عادة نحتفظ بعدد العناصر في متغير</p>
+                    <p>التعقيد الزمني: O(1)</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- تنفيذ المكدس باستخدام المصفوفة -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-code"></i> تنفيذ المكدس باستخدام المصفوفة (Array)</h2>
+            
+            <div class="explanation-box">
+                <h3><i class="fas fa-lightbulb"></i> شرح مفصل:</h3>
+                <p>في هذا التنفيذ، نستخدم مصفوفة ذات حجم ثابت لتخزين عناصر المكدس.</p>
+                <p>نستخدم متغير <code>top</code> لتتبع موقع العنصر الأخير في المكدس:</p>
+                <ul>
+                    <li>عند الإضافة (push): نزيد قيمة <code>top</code> ثم نخزن العنصر الجديد في الموقع الجديد</li>
+                    <li>عند الحذف (pop): نسترجع العنصر في الموقع <code>top</code> ثم نخفض قيمة <code>top</code></li>
+                    <li>عند الفراغ: <code>top == -1</code></li>
+                    <li>عند الامتلاء: <code>top == MAX_SIZE - 1</code></li>
+                </ul>
+            </div>
+            
+            <div class="code-block">
+                <span class="code-comment">// ملف stack.h</span><br>
+                <span class="code-keyword">#include</span> &lt;iostream&gt;<br>
+                <span class="code-keyword">const int</span> <span class="code-variable">MAX_SIZE</span> = 100;<br><br>
+                
+                <span class="code-keyword">class</span> <span class="code-function">Stack</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">top</span>; <span class="code-comment">// مؤشر قمة المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">element</span>[<span class="code-variable">MAX_SIZE</span>]; <span class="code-comment">// عناصر المكدس</span><br>
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">public</span>:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Constructor - المُنشئ</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">Stack</span>() { <span class="code-variable">top</span> = -1; }<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">void</span> <span class="code-function">initStack</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">top</span> = -1;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">bool</span> <span class="code-function">isEmpty</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> (<span class="code-variable">top</span> == -1);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">bool</span> <span class="code-function">isFull</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> (<span class="code-variable">top</span> == <span class="code-variable">MAX_SIZE</span> - 1);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">void</span> <span class="code-function">push</span>(<span class="code-keyword">int</span> <span class="code-variable">x</span>) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (!<span class="code-function">isFull</span>()) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">top</span>++;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">element</span>[<span class="code-variable">top</span>] = <span class="code-variable">x</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span class="code-keyword">else</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"Overflow! Stack is full."</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-function">pop</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (!<span class="code-function">isEmpty</span>()) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">value</span> = <span class="code-variable">element</span>[<span class="code-variable">top</span>];<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">top</span>--;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-variable">value</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span class="code-keyword">else</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"Underflow! Stack is empty."</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> -1; <span class="code-comment">// قيمة خطأ</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-function">getTop</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (!<span class="code-function">isEmpty</span>()) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-variable">element</span>[<span class="code-variable">top</span>];<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span class="code-keyword">else</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"Stack is empty."</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> -1; <span class="code-comment">// قيمة خطأ</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-function">getSize</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-variable">top</span> + 1;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                };
+            </div>
+        </section>
+        
+        <!-- مثال استخدام المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-laptop"></i> مثال استخدام المكدس</h2>
+            
+            <div class="code-block">
+                <span class="code-comment">// ملف main.cpp</span><br>
+                <span class="code-keyword">#include</span> &lt;iostream&gt;<br>
+                <span class="code-keyword">#include</span> <span class="code-string">"stack.h"</span><br><br>
+                
+                <span class="code-keyword">int</span> <span class="code-function">main</span>() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">Stack</span> <span class="code-variable">s</span>; <span class="code-comment">// إنشاء كائن المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">int</span> <span class="code-variable">x</span>;<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// التحقق من حالة المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (!<span class="code-variable">s</span>.<span class="code-function">isEmpty</span>()) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n Top = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getTop</span>() &lt;&lt; std::endl;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;} <span class="code-keyword">else</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n المكدس فارغ.\n"</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// إضافة 5 عناصر جديدة إلى المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n إضافة 5 عناصر جديدة إلى المكدس:\n"</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">for</span> (<span class="code-keyword">int</span> <span class="code-variable">i</span> = 0; <span class="code-variable">i</span> &lt; 5; ++<span class="code-variable">i</span>) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" أدخل x = "</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cin &gt;&gt; <span class="code-variable">x</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">s</span>.<span class="code-function">push</span>(<span class="code-variable">x</span>);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" القمة = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getTop</span>() &lt;&lt; std::endl;<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// إزالة عنصر من المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n إزالة عنصر من المكدس:\n"</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">s</span>.<span class="code-function">pop</span>();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" القمة = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getTop</span>() &lt;&lt; std::endl;<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// ملء المكدس حتى الحجم الأقصى</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n ملء المكدس حتى الحجم الأقصى:\n"</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">for</span> (<span class="code-keyword">int</span> <span class="code-variable">j</span> = <span class="code-variable">s</span>.<span class="code-function">getSize</span>(); <span class="code-variable">j</span> &lt; <span class="code-variable">MAX_SIZE</span>; ++<span class="code-variable">j</span>) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">s</span>.<span class="code-function">push</span>(<span class="code-variable">j</span> + 1);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" القمة = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getTop</span>() &lt;&lt; std::endl;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" عدد العناصر في المكدس = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getSize</span>() &lt;&lt; std::endl;<br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// محاولة إضافة عنصر إلى مكدس ممتلئ</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n محاولة إضافة عنصر جديد:\n"</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">" أدخل x = "</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cin &gt;&gt; <span class="code-variable">x</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">s</span>.<span class="code-function">push</span>(<span class="code-variable">x</span>); <span class="code-comment">// ستسبب overflow</span><br><br>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// تفريغ المكدس</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n تفريغ المكدس."</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-variable">s</span>.<span class="code-function">initStack</span>();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (!<span class="code-variable">s</span>.<span class="code-function">isEmpty</span>()) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n القمة = "</span> &lt;&lt; <span class="code-variable">s</span>.<span class="code-function">getTop</span>();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;} <span class="code-keyword">else</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; <span class="code-string">"\n المكدس فارغ."</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> 0;<br>
+                }
+            </div>
+            
+            <div class="example-output">
+                <h3 class="output-title"><i class="fas fa-terminal"></i> مثال على مخرجات البرنامج:</h3>
+                <p>المكدس فارغ.</p>
+                <p>إضافة 5 عناصر جديدة إلى المكدس:</p>
+                <p>أدخل x = 10</p>
+                <p>أدخل x = 20</p>
+                <p>أدخل x = 30</p>
+                <p>أدخل x = 40</p>
+                <p>أدخل x = 50</p>
+                <p>القمة = 50</p>
+                <p>إزالة عنصر من المكدس:</p>
+                <p>القمة = 40</p>
+                <p>ملء المكدس حتى الحجم الأقصى:</p>
+                <p>القمة = 99</p>
+                <p>عدد العناصر في المكدس = 100</p>
+                <p>محاولة إضافة عنصر جديد:</p>
+                <p>أدخل x = 100</p>
+                <p>Overflow! Stack is full.</p>
+                <p>تفريغ المكدس.</p>
+                <p>المكدس فارغ.</p>
+            </div>
+        </section>
+        
+        <!-- محاكاة عمليات المكدس -->
+        <section class="section">
+            <h2 class="section-title"><i class="fas fa-play-circle"></i> محاكاة عمليات المكدس</h2>
+            
+            <div class="stack-animation">
+                <div class="stack-container" id="stackContainer">
+                    <!-- العناصر تضاف هنا ديناميكياً -->
+                </div>
+                <div class="stack-label-animation">قمة المكدس (TOP)</div>
+                
+                <div class="animation-controls">
+                    <button class="animation-btn" onclick="pushElement()">إضافة عنصر (Push)</button>
+                    <button class="animation-btn" onclick="popElement()">إزالة عنصر (Pop)</button>
+                    <button class="animation-btn" onclick="clearStack()">تفريغ المكدس</button>
+                </div>
+                
+                <div class="stack-status" id="stackStatus">
+                    حالة المكدس: فارغ
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>جامعة البعث - كلية الهندسة المعلوماتية | الخوارزميات وبنى المعطيات 1 | المحاضرة 8</p>
+            <p>إعداد: ناديا خرسان</p>
+        </footer>
+    </div>
+
+    <script >
+        
+        // إنشاء عناصر المكدس الديناميكية
+        document.addEventListener('DOMContentLoaded', function() {
+            const stackVisual = document.querySelector('.stack-visual');
+            const stackItems = ['e1', 'e2', 'e3', 'e4'];
+            
+            // مسح العناصر الموجودة مسبقاً
+            while (stackVisual.children.length > 1) {
+                stackVisual.removeChild(stackVisual.lastChild);
+            }
+            
+            // إضافة العناصر
+            stackItems.forEach((item, index) => {
+                const stackItem = document.createElement('div');
+                stackItem.className = 'stack-item';
+                if (index === stackItems.length - 1) {
+                    stackItem.classList.add('stack-top');
+                }
+                stackItem.textContent = item;
+                stackVisual.appendChild(stackItem);
+            });
+            
+            // تهيئة المحاكاة
+            updateStackStatus();
+        });
+        
+        // متغيرات لمحاكاة المكدس
+        let stackElements = [];
+        let elementCounter = 1;
+        
+        // وظيفة إضافة عنصر إلى المكدس
+        function pushElement() {
+            if (stackElements.length < 10) {
+                const newElement = document.createElement('div');
+                newElement.className = 'stack-element';
+                newElement.textContent = `عنصر ${elementCounter}`;
+                if (stackElements.length === 0) {
+                    newElement.classList.add('stack-top-element');
+                }
+                
+                const stackContainer = document.getElementById('stackContainer');
+                stackContainer.appendChild(newElement);
+                stackElements.push(newElement);
+                
+                // تحديث تنسيق العناصر
+                if (stackElements.length > 0) {
+                    stackElements.forEach(el => el.classList.remove('stack-top-element'));
+                    stackElements[stackElements.length - 1].classList.add('stack-top-element');
+                }
+                
+                elementCounter++;
+                updateStackStatus();
+            } else {
+                alert('المكدس ممتلئ! لا يمكن إضافة المزيد من العناصر.');
+            }
+        }
+        
+        // وظيفة إزالة عنصر من المكدس
+        function popElement() {
+            if (stackElements.length > 0) {
+                const elementToRemove = stackElements.pop();
+                elementToRemove.remove();
+                
+                // تحديث تنسيق العناصر
+                if (stackElements.length > 0) {
+                    stackElements[stackElements.length - 1].classList.add('stack-top-element');
+                }
+                
+                updateStackStatus();
+            } else {
+                alert('المكدس فارغ! لا يمكن إزالة أي عنصر.');
+            }
+        }
+        
+        // وظيفة تفريغ المكدس
+        function clearStack() {
+            const stackContainer = document.getElementById('stackContainer');
+            while (stackContainer.firstChild) {
+                stackContainer.removeChild(stackContainer.firstChild);
+            }
+            stackElements = [];
+            elementCounter = 1;
+            updateStackStatus();
+        }
+        
+        // تحديث حالة المكدس
+        function updateStackStatus() {
+            const statusElement = document.getElementById('stackStatus');
+            const size = stackElements.length;
+            
+            if (size === 0) {
+                statusElement.innerHTML = 'حالة المكدس: <span style="color: #e74c3c;">فارغ</span>';
+            } else if (size === 10) {
+                statusElement.innerHTML = 'حالة المكدس: <span style="color: #e74c3c;">ممتلئ</span>';
+            } else {
+                statusElement.innerHTML = `حالة المكدس: يحتوي على ${size} عناصر`;
+            }
+            
+            statusElement.innerHTML += `<br>القمة الحالية: ${size > 0 ? 'عنصر ' + (elementCounter - 1) : 'لا يوجد'}`;
+        }
+    </script>
+</body>
+</html>
